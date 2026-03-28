@@ -816,14 +816,10 @@ function updateCountdown() {
     document.getElementById('cd-s').textContent = '0';
     return;
   }
-  var days    = Math.floor(diff / (1000 * 60 * 60 * 24));
-  var hours   = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  var minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  var seconds = Math.floor((diff % (1000 * 60)) / 1000);
-  document.getElementById('cd-d').textContent = days;
-  document.getElementById('cd-h').textContent = hours;
-  document.getElementById('cd-m').textContent = minutes;
-  document.getElementById('cd-s').textContent = seconds;
+  document.getElementById('cd-d').textContent = Math.floor(diff / 86400000);
+  document.getElementById('cd-h').textContent = Math.floor((diff % 86400000) / 3600000);
+  document.getElementById('cd-m').textContent = Math.floor((diff % 3600000) / 60000);
+  document.getElementById('cd-s').textContent = Math.floor((diff % 60000) / 1000);
 }
 updateCountdown();
 setInterval(updateCountdown, 1000);
@@ -831,82 +827,51 @@ setInterval(updateCountdown, 1000);
 // ── RSVP TOGGLE ──
 document.getElementById('ra').addEventListener('change', function() {
   var v = this.value;
-  document.getElementById('g-ad').style.display  = v === 'da' ? 'block' : 'none';
-  document.getElementById('g-kd').style.display  = v === 'da' ? 'block' : 'none';
+  document.getElementById('g-ad').style.display  = (v === 'da') ? 'block' : 'none';
+  document.getElementById('g-kd').style.display  = (v === 'da') ? 'block' : 'none';
   document.getElementById('g-msg').style.display = v ? 'block' : 'none';
 });
 
 // ── RSVP SUBMIT → GOOGLE SHEETS ──
 function sendRSVP() {
-  var name   = document.getElementById('rn').value.trim();
-  var att    = document.getElementById('ra').value;
+  var name = document.getElementById('rn').value.trim();
+  var att  = document.getElementById('ra').value;
   if (!name || !att) {
     alert('Te rugam sa completezi numele si raspunsul.');
     return;
   }
-  var adults  = att === 'da' ? document.getElementById('rad').value : 'Nu participa';
-  var kids    = att === 'da' ? document.getElementById('rkd').value : 'Fara copii';
-  var msg     = document.getElementById('rmsg').value.trim() || '';
-  var attText = att === 'da' ? 'Vin cu drag!' : 'Nu pot veni';
+  var adults  = (att === 'da') ? document.getElementById('rad').value : 'Nu participa';
+  var kids    = (att === 'da') ? document.getElementById('rkd').value : 'Fara copii';
+  var msg     = document.getElementById('rmsg').value.trim();
+  var attText = (att === 'da') ? 'Vin cu drag!' : 'Nu pot veni';
 
   var scriptUrl = 'https://script.google.com/macros/s/AKfycbxsp5mumCFyoa49HMgv2G0DPZG6zJu1TU67szhqUSAgzJAoSKKGu-o-mzABS2hoZUJI/exec';
+
+  var payload = JSON.stringify({
+    nume:      name,
+    participi: attText,
+    adulti:    adults,
+    copii:     kids,
+    mesaj:     msg
+  });
 
   fetch(scriptUrl, {
     method: 'POST',
     mode: 'no-cors',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      nume:     name,
-      participi: attText,
-      adulti:   adults,
-      copii:    kids,
-      mesaj:    msg
-    })
+    body: payload
   });
 
   var thanks = document.getElementById('rsvp-ok');
-  if (att === 'da') {
-    thanks.innerHTML = '🎉 Minunat, <strong>' + name + '</strong>! Abia asteptam sa te vedem pe 6 august!';
-  } else {
-    thanks.innerHTML = '💛 Multumim, <strong>' + name + '</strong>! Ne pare rau ca nu poti veni.';
-  }
+  thanks.innerHTML = (att === 'da')
+    ? ('🎉 Minunat, <strong>' + name + '</strong>! Abia asteptam sa te vedem pe 6 august!')
+    : ('💛 Multumim, <strong>' + name + '</strong>! Ne pare rau ca nu poti veni.');
   thanks.style.display = 'block';
   document.querySelector('.btn-send').style.display = 'none';
   var fields = document.querySelectorAll('.fg, #g-ad, #g-kd, #g-msg');
   for (var i = 0; i < fields.length; i++) {
     fields[i].style.display = 'none';
   }
-}
-  var adults  = att === 'da' ? document.getElementById('rad').value : 'Nu participa';
-  var kids    = att === 'da' ? document.getElementById('rkd').value : 'Fara copii';
-  var msg     = document.getElementById('rmsg').value.trim();
-  var attText = att === 'da' ? 'Vin cu drag !' : 'Nu pot veni';
-  var mesaj   = name + (msg ? ' — ' + msg : '');
-
-  // Show thank you first
-  var thanks = document.getElementById('rsvp-ok');
-  if (att === 'da') {
-    thanks.innerHTML = '🎉 Minunat, <strong>' + name + '</strong>! Abia asteptam sa te vedem pe 6 august! Te redirectionam in 3 secunde...';
-  } else {
-    thanks.innerHTML = '💛 Intelegem, <strong>' + name + '</strong>. Multumim pentru raspuns! Te redirectionam in 3 secunde...';
-  }
-  thanks.style.display = 'block';
-  document.querySelector('.btn-send').style.display = 'none';
-  var fields = document.querySelectorAll('.fg, #g-ad, #g-kd, #g-msg');
-  for (var i = 0; i < fields.length; i++) {
-    fields[i].style.display = 'none';
-  }
-
-  // Build prefilled Google Forms URL and redirect after 3 seconds
-  var formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSfQfe15it2XDpGKvGpM7USFWW5HaNe_L3bRDX1iyWjcXSCE2Q/viewform?usp=pp_url'
-    + '&entry.1223389939=' + encodeURIComponent(attText)
-    + '&entry.1685793799=' + encodeURIComponent(adults)
-    + '&entry.678146109='  + encodeURIComponent(kids)
-    + '&entry.253238415='  + encodeURIComponent(mesaj);
-
-  setTimeout(function() {
-    window.location.href = formUrl;
-  }, 3000);
 }
 
 // ── WELCOME BANNER ──
@@ -930,10 +895,10 @@ function closeWelcome() {
   setTimeout(function() { banner.style.display = 'none'; }, 400);
 }
 
-// ── SCROLL REVEAL ──
-var revealEls = document.querySelectorAll('.reveal');
-for (var i = 0; i < revealEls.length; i++) {
-  revealEls[i].classList.add('vis');
+// ── REVEAL ──
+var els = document.querySelectorAll('.reveal');
+for (var i = 0; i < els.length; i++) {
+  els[i].classList.add('vis');
 }
 </script>
 
