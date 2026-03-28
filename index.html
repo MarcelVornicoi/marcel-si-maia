@@ -872,7 +872,7 @@ function sendRSVP() {
     + '&entry.253238415='  + encodeURIComponent(mesaj);
 
   setTimeout(function() {
-    window.open(formUrl, '_blank');
+    window.location.href = formUrl;
   }, 3000);
 }
 
