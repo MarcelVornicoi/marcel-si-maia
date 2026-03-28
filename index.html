@@ -836,7 +836,7 @@ document.getElementById('ra').addEventListener('change', function() {
   document.getElementById('g-msg').style.display = v ? 'block' : 'none';
 });
 
-// ── RSVP SUBMIT TO GOOGLE FORMS ──
+// ── RSVP SUBMIT → GOOGLE FORMS ──
 function sendRSVP() {
   var name   = document.getElementById('rn').value.trim();
   var att    = document.getElementById('ra').value;
@@ -844,6 +844,40 @@ function sendRSVP() {
     alert('Te rugam sa completezi numele si raspunsul.');
     return;
   }
+  var adults  = att === 'da' ? document.getElementById('rad').value : 'Nu participa';
+  var kids    = att === 'da' ? document.getElementById('rkd').value : 'Fara copii';
+  var msg     = document.getElementById('rmsg').value.trim() || '';
+  var attText = att === 'da' ? 'Vin cu drag!' : 'Nu pot veni';
+
+  // Show thank you message immediately
+  var thanks = document.getElementById('rsvp-ok');
+  if (att === 'da') {
+    thanks.innerHTML = '🎉 Minunat, <strong>' + name + '</strong>! Abia asteptam sa te vedem pe 6 august!';
+  } else {
+    thanks.innerHTML = '💛 Multumim, <strong>' + name + '</strong>! Ne pare rau ca nu poti veni.';
+  }
+  thanks.style.display = 'block';
+  document.querySelector('.btn-send').style.display = 'none';
+  var fields = document.querySelectorAll('.fg, #g-ad, #g-kd, #g-msg');
+  for (var i = 0; i < fields.length; i++) {
+    fields[i].style.display = 'none';
+  }
+
+  // Submit silently to Google Forms
+  var formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSfb2s1BN583IoB1b4HnHb3CZw8a-LaBkRcrcKuhKskr_T92Vg/formResponse';
+  var body = 'entry.2106683386=' + encodeURIComponent(name)
+           + '&entry.82421379='   + encodeURIComponent(attText)
+           + '&entry.1535532505=' + encodeURIComponent(adults)
+           + '&entry.1160970878=' + encodeURIComponent(kids)
+           + '&entry.601210934='  + encodeURIComponent(msg);
+
+  fetch(formUrl, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: body
+  });
+}
   var adults  = att === 'da' ? document.getElementById('rad').value : 'Nu participa';
   var kids    = att === 'da' ? document.getElementById('rkd').value : 'Fara copii';
   var msg     = document.getElementById('rmsg').value.trim();
